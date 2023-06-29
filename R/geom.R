@@ -4,42 +4,41 @@
 #'
 #' @param data
 #' @param scales
-#' @param county
+#' @param keep_state
 #'
 #' @return
 #' @export
 #'
 #' @examples
 #' library(dplyr)
-#' #nc_flat |> rename(fips = FIPS) |> compute_county_nc() |> head()
-#' #nc_flat |> rename(fips = FIPS) |> compute_county_nc(county = "Ashe")
-compute_county_nc <- function(data, scales, county = NULL){
+#' #brasil_flat |> rename(fips = FIPS) |> compute_state_br() |> head()
+#' #brasil_flat |> rename(fips = FIPS) |> compute_state_br(keep_state = "Ashe")
+compute_state_br <- function(data, scales, keep_state = NULL){
 
   reference_filtered <- reference_full
   #
-  if(!is.null(county)){
+  if(!is.null(keep_state)){
 
-    county %>% tolower() -> county
+    keep_state %>% tolower() -> keep_state
 
     reference_filtered %>%
-      dplyr::filter(.data$county_name %>%
+      dplyr::filter(.data$state %>%
                       tolower() %in%
-                      county) ->
+                      keep_state) ->
       reference_filtered
 
   }
 
   # to prevent overjoining
   reference_filtered %>%
-    dplyr::select("fips", "geometry", "xmin",
+    dplyr::select("state", "state_abb","state_code",  "geometry", "xmin",
                   "xmax", "ymin", "ymax") ->
     reference_filtered
 
 
   data %>%
     dplyr::inner_join(reference_filtered) %>% # , by = join_by(fips)
-    dplyr::mutate(group = -1) %>%
-    dplyr::select(-fips) #%>%
+    dplyr::mutate(group = -1)
     # sf::st_as_sf() %>%
     # sf::st_transform(crs = 5070)
 
@@ -48,9 +47,9 @@ compute_county_nc <- function(data, scales, county = NULL){
 
 ###### Specify ggproto ###############
 
-StatCountync <- ggplot2::ggproto(`_class` = "StatCountync",
+StatStatebrasil <- ggplot2::ggproto(`_class` = "StatStatebrasil",
                                `_inherit` = ggplot2::Stat,
-                               compute_panel = compute_county_nc,
+                               compute_panel = compute_state_br,
                                default_aes = ggplot2::aes(geometry =
                                                             ggplot2::after_stat(geometry)))
 
@@ -73,11 +72,11 @@ StatCountync <- ggplot2::ggproto(`_class` = "StatCountync",
 #'
 #' @examples
 #' library(ggplot2)
-#' nc_flat %>%
+#' brasil_flat %>%
 #' ggplot() +
-#' aes(fips = FIPS) +
-#' geom_sf_countync()
-geom_sf_countync <- function(
+#' aes(state = state) +
+#' geom_sf_statebrasil()
+geom_sf_statebrasil <- function(
                                  mapping = NULL,
                                  data = NULL,
                                  position = "identity",
@@ -89,7 +88,7 @@ geom_sf_countync <- function(
                                  ) {
 
                                  c(ggplot2::layer_sf(
-                                   stat = StatCountync,  # proto object from step 2
+                                   stat = StatStatebrasil,  # proto object from step 2
                                    geom = ggplot2::GeomSf,  # inherit other behavior
                                    data = data,
                                    mapping = mapping,
