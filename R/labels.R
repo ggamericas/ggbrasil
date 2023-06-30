@@ -1,5 +1,5 @@
 # step 00 reference data
-# nc_county_centers <- data.frame(     x   =  -81.49496,   y = 36.42112,  county_name = "Ashe",   fips = "37009")
+# brasil_state_centers <- data.frame(     x   =  -81.49496,   y = 36.42112,  county_name = "Ashe",   fips = "37009")
 
 
 # step 1
@@ -7,7 +7,7 @@
 #'
 #' @param data
 #' @param scales
-#' @param keep_county
+#' @param keep_state
 #'
 #' @return
 #' @export
@@ -17,23 +17,23 @@
 #'   dplyr::rename(fips = FIPS) |>
 #'   dplyr::rename(label = NAME) |>
 #'   compute_panel_county_centers()
-compute_panel_county_centers <- function(data,
+compute_panel_state_centers <- function(data,
                                          scales,
-                                         keep_county = NULL){
+                                         keep_state = NULL){
 
-  nc_county_centers_filtered <- nc_county_centers
+  brasil_state_centers_filtered <- brasil_state_centers
 
-  if(!is.null(keep_county)){
-    keep_county %>% tolower() -> keep_county
+  if(!is.null(keep_state)){
+    keep_state %>% tolower() -> keep_state
 
-    nc_county_centers_filtered %>%
-      dplyr::filter(.data$county_name %>%
+    brasil_state_centers_filtered %>%
+      dplyr::filter(.data$state %>%
                       tolower() %in%
-                      keep_county) ->
-      nc_county_centers_filtered}
+                      keep_state) ->
+      brasil_state_centers_filtered}
 
   data %>%
-    dplyr::inner_join(nc_county_centers_filtered) %>%
+    dplyr::inner_join(brasil_state_centers_filtered) %>%
     dplyr::select(x, y, label)
 
 }
@@ -42,11 +42,11 @@ compute_panel_county_centers <- function(data,
 
 
 # step 2 proto
-StatCountycenters <- ggplot2::ggproto(
-  `_class` = "StatRownumber",
+StatStatecenters <- ggplot2::ggproto(
+  `_class` = "StatStatecenters",
   `_inherit` = ggplot2::Stat,
   # required_aes = c("label"), # for some reason this breaks things... why?
-  compute_panel = compute_panel_county_centers
+  compute_panel = compute_panel_state_centers
 )
 
 #' Title
@@ -63,33 +63,18 @@ StatCountycenters <- ggplot2::ggproto(
 #' @export
 #'
 #' @examples
+#'
 #' library(ggplot2)
-#' ggnc::nc_flat %>%
-#'  ggplot() +
-#'  aes(fips = FIPS, label = NAME) +
-#'  geom_label_nc_county()
+#' brasil_flat %>%
+#' ggplot() +
+#' aes(state = state) +
+#' geom_sf_statebrasil() +
+#' aes(fill = region, label = state) +
 #'
-#' ggnc::nc_flat %>%
-#'  ggplot() +
-#'  aes(fips = FIPS, label = NAME) +
-#'  geom_sf_countync() +
-#'  geom_label_nc_county()
-#'
-#'  ggnc::nc_flat %>%
-#'  ggplot() +
-#'  aes(fips = FIPS, label = SID74, fill = SID74) +
-#'  geom_sf_countync() +
-#'  geom_label_nc_county(color = "oldlace")
-#'
-#'  ggnc::nc_flat %>%
-#'  ggplot() +
-#'  aes(fips = FIPS, fill = SID74,
-#'      label = paste0(NAME, "\n", SID74)) +
-#'  geom_sf_countync() +
-#'  geom_label_nc_county(lineheight = .7,
+#'  geom_label_brasil_state(lineheight = .7,
 #'  size = 2, check_overlap= TRUE,
 #'  color = "oldlace")
-geom_label_nc_county <- function(
+geom_label_brasil_state <- function(
   mapping = NULL,
   data = NULL,
   position = "identity",
@@ -97,7 +82,7 @@ geom_label_nc_county <- function(
   show.legend = NA,
   inherit.aes = TRUE, ...) {
   ggplot2::layer(
-    stat = StatCountycenters,  # proto object from Step 2
+    stat = StatStatecenters,  # proto object from Step 2
     geom = ggplot2::GeomText,  # inherit other behavior
     data = data,
     mapping = mapping,

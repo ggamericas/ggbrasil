@@ -9,40 +9,41 @@
 #'
 #' @examples
 #' library(dplyr)
-#' #nc_flat |> rename(fips = FIPS) |> compute_county_nc() |> head() |> str()
-#' #nc_flat |> rename(fips = FIPS) |> compute_county_nc(county = "Ashe")
-compute_county_nc_stamp <- function(data, scales, county = NULL){
+#' #nc_flat |> rename(fips = FIPS) |> compute_state_brasil() |> head() |> str()
+#' #nc_flat |> rename(fips = FIPS) |> compute_state_brasil(keep_state = "Ashe")
+compute_state_brasil_stamp <- function(data, scales, keep_state = NULL){
 
   reference_filtered <- reference_full
   #
-  if(!is.null(county)){
+  if(!is.null(keep_state)){
 
-    county %>% tolower() -> county
+    keep_state %>% tolower() -> keep_state
 
     reference_filtered %>%
-      dplyr::filter(.data$county_name %>%
+      dplyr::filter(.data$state %>%
                       tolower() %in%
-                      county) ->
+                      keep_state) ->
       reference_filtered
 
   }
 
   reference_filtered %>%
-    dplyr::select("fips", "geometry", "xmin",
-                  "xmax", "ymin", "ymax") ->
+    dplyr::select("state", "state_abb","state_code",
+                  "geometry",
+                  "xmin", "xmax",
+                  "ymin", "ymax") ->
     reference_filtered
 
 
   reference_filtered %>%
-    dplyr::mutate(group = -1) %>%
-    dplyr::select(-fips)
+    dplyr::mutate(group = -1)
 
 }
 
 
-StatCountyncstamp <- ggplot2::ggproto(`_class` = "StatCountyncstamp",
+StatCountybrasilstamp <- ggplot2::ggproto(`_class` = "StatCountybrasilstamp",
                                `_inherit` = ggplot2::Stat,
-                               compute_panel = compute_county_nc_stamp,
+                               compute_panel = compute_state_brasil_stamp,
                                default_aes = ggplot2::aes(geometry =
                                                             ggplot2::after_stat(geometry)))
 
@@ -64,10 +65,10 @@ StatCountyncstamp <- ggplot2::ggproto(`_class` = "StatCountyncstamp",
 #' @examples
 #' library(ggplot2)
 #' ggplot() +
-#' stamp_sf_countync()
-stamp_sf_countync <- function(
+#' stamp_sf_statebrasil()
+stamp_sf_statebrasil <- function(
                                  mapping = NULL,
-                                 data = NULL,
+                                 data = cars,
                                  position = "identity",
                                  na.rm = FALSE,
                                  show.legend = NA,
@@ -77,7 +78,7 @@ stamp_sf_countync <- function(
                                  ) {
 
                                  c(ggplot2::layer_sf(
-                                   stat = StatCountyncstamp,  # proto object from step 2
+                                   stat = StatCountybrasilstamp,  # proto object from step 2
                                    geom = ggplot2::GeomSf,  # inherit other behavior
                                    data = data,
                                    mapping = mapping,

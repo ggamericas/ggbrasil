@@ -75,7 +75,9 @@ StatStatebrasil <- ggplot2::ggproto(`_class` = "StatStatebrasil",
 #' brasil_flat %>%
 #' ggplot() +
 #' aes(state = state) +
-#' geom_sf_statebrasil()
+#' geom_sf_statebrasil(linewidth = .05) +
+#' aes(fill = region) +
+#' scale_fill_viridis_d()
 geom_sf_statebrasil <- function(
                                  mapping = NULL,
                                  data = NULL,
